@@ -4,7 +4,7 @@ TAFFISH wrapper for [antiSMASH](https://antismash.secondarymetabolites.org/),
 the antibiotics and Secondary Metabolite Analysis SHell for bacterial and
 fungal secondary metabolite biosynthetic gene cluster prediction.
 
-This app packages antiSMASH `8.0.4-r1` using the official
+This app packages antiSMASH `8.0.4-r2` using the official
 `antismash/standalone:8.0.4` Docker image as the base image. That upstream
 standalone image includes the required antiSMASH databases, so normal local
 runs do not need a separate database download. The tradeoff is size: upstream
@@ -14,9 +14,9 @@ documents the standalone image as roughly a 9 GB download.
 
 - name: `antismash`
 - command: `taf-antismash`
-- version: `8.0.4-r1`
+- version: `8.0.4-r2`
 - kind: `tool`
-- image: `ghcr.io/taffish/antismash:8.0.4-r1`
+- image: `ghcr.io/taffish/antismash:8.0.4-r2`
 - upstream: antiSMASH tag `8-0-4`
 - runtime version: antiSMASH `8.0.4`
 - upstream Docker base: `antismash/standalone:8.0.4`
@@ -33,7 +33,7 @@ taf install antismash
 Install the exact release:
 
 ```sh
-taf install antismash 8.0.4-r1
+taf install antismash 8.0.4-r2
 ```
 
 For local testing before this app is published to the public index:
@@ -77,6 +77,17 @@ taf-antismash \
   --minimal \
   --output-dir antismash-minimal \
   genome.gbk
+```
+
+Run a minimal bacterial FASTA analysis with Prodigal gene finding:
+
+```sh
+taf-antismash \
+  --taxon bacteria \
+  --genefinding-tool prodigal \
+  --minimal \
+  --output-dir antismash-fasta-minimal \
+  genome.fa
 ```
 
 Run with selected extra analyses:
@@ -138,8 +149,9 @@ style to manage Docker mounts. TAFFISH instead exposes the normal upstream
 
 antiSMASH accepts annotated GenBank inputs and FASTA inputs. GenBank is usually
 preferred when curated features are available; FASTA input can be used with
-antiSMASH gene-finding options. Set `--taxon bacteria` or `--taxon fungi`
-explicitly for reproducible local and flow usage.
+antiSMASH gene-finding options such as `--genefinding-tool prodigal`. Set
+`--taxon bacteria` or `--taxon fungi` explicitly for reproducible local and flow
+usage.
 
 Typical outputs include:
 
@@ -159,7 +171,7 @@ overrides the Docker entrypoint so TAFFISH can expose the upstream CLI directly.
 Bundled software and resources include:
 
 - antiSMASH `8.0.4`
-- the standalone antiSMASH database set under `/databases`
+- the standalone antiSMASH database set under `/local/databases`
 - Python 3 and antiSMASH Python modules
 - DIAMOND
 - HMMER 2/3 tooling used by antiSMASH modules
@@ -172,6 +184,9 @@ The official antiSMASH documentation describes the standalone image as the
 zero-fuss Docker route with required databases included. A lighter upstream
 `standalone-lite` route exists, but this TAFFISH app intentionally packages the
 full standalone image so core analyses are not blocked by missing databases.
+The upstream image declares `/databases` as a Docker volume for wrapper/user
+overrides, but the full standalone image's default antiSMASH configuration uses
+the built-in database directory at `/local/databases`.
 
 ## Platform
 
@@ -193,7 +208,7 @@ This app does not bundle:
 - input genomes or example datasets
 - MIBiG downloads beyond what the official standalone database set includes
 - remote antiSMASH web-service submission
-- custom private databases
+- custom private databases, unless users mount them and pass `--databases PATH`
 - workflow-level batching, QC, comparative genomics, or report aggregation
 
 Runtime network access is not required for normal standalone runs. Commands
@@ -229,10 +244,10 @@ Smoke tests cover:
 - wrapper metadata and TAFFISH build parsing
 - antiSMASH Python package version and upstream CLI version
 - upstream help and full-help option surface
-- bundled `/databases` presence and antiSMASH module-data preparation
+- bundled `/local/databases` presence and antiSMASH module-data preparation
 - key helper executables: DIAMOND, HMMER, Prodigal, and BLAST+
-- a tiny offline FASTA run with `--taxon bacteria --minimal`, checking that a
-  JSON result file is produced
+- a tiny offline FASTA run with `--taxon bacteria --genefinding-tool prodigal
+  --minimal`, checking that a JSON result file is produced
 
 The smoke run is intentionally small. It does not validate biological accuracy,
 large genomes, every optional module, or performance on production datasets.

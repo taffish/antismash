@@ -9,13 +9,16 @@ ENTRYPOINT []
 CMD ["antismash"]
 WORKDIR /root
 
+# The full standalone image keeps its built-in database under /local/databases.
+# /databases is an upstream-declared Docker volume for wrapper/user overrides
+# and is empty during child-image RUN steps.
 RUN set -eux; \
     python3 -c 'import antismash; print(antismash.__version__)' | grep -Fx '8.0.4' >/dev/null; \
     antismash --version 2>&1 | grep -F '8.0.4' >/dev/null; \
     antismash --help 2>&1 | grep -F 'usage: antismash' >/dev/null; \
     antismash --help-showall 2>&1 | grep -F -- '--minimal' >/dev/null; \
-    test -d /databases; \
-    find /databases -mindepth 1 -type f | head -n 1 | grep -q .; \
+    test -d /local/databases; \
+    find -L /local/databases -mindepth 1 -print | head -n 1 | grep -q .; \
     diamond version 2>&1 | grep -F 'diamond' >/dev/null; \
     hmmscan -h 2>&1 | grep -F 'HMMER' >/dev/null; \
     hmmsearch -h 2>&1 | grep -F 'HMMER' >/dev/null; \

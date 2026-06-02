@@ -1,4 +1,4 @@
-taf-antismash 8.0.4-r1
+taf-antismash 8.0.4-r2
 
 TAFFISH wrapper for antiSMASH 8.0.4, the antibiotics and Secondary
 Metabolite Analysis SHell for bacterial and fungal biosynthetic gene
@@ -39,6 +39,13 @@ Common examples:
     genome.gbk
 
   taf-antismash \
+    --taxon bacteria \
+    --genefinding-tool prodigal \
+    --minimal \
+    --output-dir antismash-fasta-minimal \
+    genome.fa
+
+  taf-antismash \
     --taxon fungi \
     --output-dir fungismash-out \
     fungal_genome.gbk
@@ -66,12 +73,15 @@ Notes:
   share names with TAFFISH wrapper options.
 
   The official standalone image includes required antiSMASH databases under
-  /databases. It is large; upstream documents the standalone download at
+  /local/databases. It is large; upstream documents the standalone download at
   roughly 9 GB. Runtime database download is not needed for normal runs.
+  Advanced users can mount a custom database directory and pass
+  --databases PATH.
 
   Set --taxon bacteria or --taxon fungi explicitly for reproducible local and
   flow usage. GenBank input is preferred when curated annotations are available;
-  FASTA input can be used with antiSMASH gene-finding options.
+  FASTA input can be used with antiSMASH gene-finding options such as
+  --genefinding-tool prodigal.
 
 Platform:
   Native container platform is linux/amd64. Docker and Podman runs request
