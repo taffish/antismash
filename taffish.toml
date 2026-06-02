@@ -1,0 +1,48 @@
+[package]
+name = "antismash"
+kind = "tool"
+version = "8.0.4"
+release = 1
+license = "Apache-2.0"
+main = "src/main.taf"
+
+[repository]
+url = "https://github.com/taffish/antismash"
+
+[command]
+name = "taf-antismash"
+
+[runtime]
+pipe = true
+command_mode = true
+
+[container]
+image = "ghcr.io/taffish/antismash:8.0.4-r1"
+dockerfile = "docker/Dockerfile"
+build_platforms = "linux/amd64"
+
+[meta]
+domain = "bio"
+categories = ["genome-mining", "annotation", "secondary-metabolism", "bgc", "microbial-genomics"]
+keywords = ["antiSMASH", "biosynthetic gene cluster", "BGC", "secondary metabolism", "natural products", "genome mining", "ClusterBlast", "MIBiG", "NRPS", "PKS"]
+description = "antiSMASH 8.0.4 standalone runtime for bacterial and fungal secondary metabolite biosynthetic gene cluster prediction."
+
+[upstream]
+name = "antiSMASH"
+type = "github"
+repo = "antismash/antismash"
+homepage = "https://antismash.secondarymetabolites.org/"
+release_url = "https://github.com/antismash/antismash/tree/8-0-4"
+downloads = "docker://antismash/standalone:8.0.4@sha256:d3f390e687cfe02f1387be40256dddbf678e91bc56b96c36da07b56ec8bda29d; https://dl.secondarymetabolites.org/releases/8.0.4/antismash-8.0.4.tar.gz; https://github.com/antismash/antismash/tree/8-0-4"
+version = "8-0-4"
+license = "AGPL-3.0-or-later; bundled databases, third-party tools, and data resources retain their own upstream terms"
+citation = "Blin et al. 2025, antiSMASH 8.0"
+doi = "10.1093/nar/gkaf334"
+pmid = "40276974"
+watch = "tags"
+
+[smoke]
+backend = "docker"
+timeout = 600
+exist = ["antismash", "download-antismash-databases", "python3", "diamond", "hmmscan", "hmmsearch", "prodigal", "blastp", "makeblastdb"]
+test = ["python3 -c 'import antismash; print(antismash.__version__)' | grep -Fx '8.0.4' >/dev/null && antismash --version 2>&1 | grep -F '8.0.4' >/dev/null", "antismash --help 2>&1 | grep -F 'usage: antismash' >/dev/null && antismash --help-showall 2>&1 | grep -F -- '--minimal' >/dev/null && antismash --help-showall 2>&1 | grep -F -- '--taxon' >/dev/null", "test -d /databases && find /databases -mindepth 1 -type f | head -n 1 | grep -q . && python3 -c 'import antismash; antismash.config.build_config([\"--databases\", \"/databases\"], modules=antismash.get_all_modules()); antismash.main.prepare_module_data()'", "diamond version 2>&1 | grep -F 'diamond' >/dev/null && hmmscan -h 2>&1 | grep -F 'HMMER' >/dev/null && hmmsearch -h 2>&1 | grep -F 'HMMER' >/dev/null && prodigal -v 2>&1 | grep -F 'Prodigal' >/dev/null && blastp -version 2>&1 | grep -F 'blastp' >/dev/null", "tmp=/tmp/taf-antismash-smoke-$$; rm -rf \"$tmp\"; mkdir -p \"$tmp\"; python3 -c 'print(\">tiny\\n\" + \"ATG\" + \"GCT\" * 998 + \"TAA\")' > \"$tmp/tiny.fa\"; antismash --taxon bacteria --minimal --output-dir \"$tmp/out\" \"$tmp/tiny.fa\" >/tmp/taf-antismash-smoke.log 2>&1; find \"$tmp/out\" -type f -name \"*.json\" | grep -q .; rm -rf \"$tmp\""]
